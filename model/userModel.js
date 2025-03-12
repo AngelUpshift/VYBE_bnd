@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const { isEmail } = require("validator");
 const { genderTypes, roleTypes } = require("../config/roles");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 const UserSchema = mongoose.Schema(
   {
@@ -142,7 +143,18 @@ UserSchema.pre("save", async function (next) {
   }
 });
 
-// kreiranje reset token tuka =>
+UserSchema.methods.createRandomResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  this.passwordResetTokenExpireAt = Date.now() + 900000;
+
+  return resetToken;
+};
 
 const User = mongoose.model("Users", UserSchema);
 module.exports = User;

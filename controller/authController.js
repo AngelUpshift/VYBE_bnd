@@ -26,4 +26,10 @@ const forgotPassword = async (req, res) => {
   return res.status(response.status).json(response);
 };
 
-module.exports = { me, logout, changePassword, forgotPassword };
+const resetPassword = async (req, res) => {
+  const response = await authService.resetPassword(req);
+
+  return res.status(response.status).json(response);
+};
+
+module.exports = { me, logout, changePassword, forgotPassword, resetPassword };

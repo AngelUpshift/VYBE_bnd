@@ -4,7 +4,9 @@ const responseService = require("../utils/responseService");
 const httpStatus = require("http-status");
 const client = require("../config/redis");
 const bcrypt = require("bcryptjs");
-const email = require("../config/email");
+const sendEmail = require("../config/email");
+const crypto = require("crypto");
+const userResponseObject = require("../utils/userResponseObject");
 
 const me = async (request) => {
   try {
@@ -22,7 +24,11 @@ const me = async (request) => {
       );
     }
 
-    return responseService.success("Successfully found user.", foundUser, {});
+    return responseService.success(
+      "Successfully found user.",
+      userResponseObject(foundUser),
+      {}
+    );
   } catch (error) {
     return responseService.error(
       "Internal server error.",
@@ -97,7 +103,7 @@ const changePassword = async (request) => {
 
     return responseService.success(
       "Password changed successfully",
-      foundUser,
+      userResponseObject(foundUser),
       {}
     );
   } catch (error) {
@@ -122,6 +128,92 @@ const forgotPassword = async (request) => {
       httpStatus.status.NOT_FOUND
     );
   }
+
+  const resetToken = foundUser.createRandomResetToken();
+  await foundUser.save({ validateBeforeSave: false });
+  // for development
+  // const url = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+  // for testing
+  const url = `http://localhost:5000/v1/auth/reset-password/${resetToken}`;
+
+  const message = `Dear Angel\n\nWe have received a request to reset your password. Please click the link below to proceed with resetting your password\n\n${url}\n\nIf you did not request a password reset, please ignore this email or contact our support team for assistance.\n\nThank you,\nVybe Support Team`;
+
+  const options = {
+    email: foundUser.email,
+    subject: "password resseting",
+    message: message,
+  };
+  try {
+    await sendEmail(options);
+
+    return responseService.success(
+      "Mail sent successfully",
+      userResponseObject(foundUser),
+      {}
+    );
+  } catch (error) {
+    foundUser.passwordResetToken = undefined;
+    foundUser.passwordResetTokenExpireAt = undefined;
+
+    return responseService.error(
+      "Internal server error.",
+      errors.SERVER_ERROR,
+      {},
+      httpStatus.status.INTERNAL_SERVER_ERROR
+    );
+  }
 };
 
-module.exports = { me, logout, changePassword, forgotPassword };
+const resetPassword = async (request) => {
+  const { token } = request.params;
+  const { newPassword, confirmNewPassword } = request.body;
+
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  const validUser = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetTokenExpireAt: { $gt: Date.now() },
+  });
+
+  if (!validUser) {
+    return responseService.error(
+      "Token is not valid.",
+      errors.NOT_EXIST,
+      {},
+      httpStatus.status.NOT_FOUND
+    );
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    return responseService.error(
+      "Passwords are not matching.",
+      errors.BAD_REQUEST,
+      {}
+    );
+  }
+
+  validUser.password = newPassword;
+  validUser.passwordResetToken = undefined;
+  validUser.passwordResetTokenExpireAt = undefined;
+  validUser.passwordChangedAt = Date.now();
+
+  try {
+    await validUser.save();
+  } catch (error) {
+    responseService.error(
+      "Internal server error.",
+      errors.SERVER_ERROR,
+      {},
+      httpStatus.status.INTERNAL_SERVER_ERROR
+    );
+  }
+
+  return responseService.success(
+    "Successful password reset.",
+    userResponseObject(validUser),
+    {}
+  );
+};
+
+module.exports = { me, logout, changePassword, forgotPassword, resetPassword };

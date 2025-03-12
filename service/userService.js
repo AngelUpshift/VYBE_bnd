@@ -4,6 +4,7 @@ const { createToken } = require("../config/token");
 const responseService = require("../utils/responseService");
 const errors = require("../constants/errors");
 const httpStatus = require("http-status");
+const userResponseObject = require("../utils/userResponseObject");
 
 const register = async (request) => {
   try {
@@ -31,18 +32,9 @@ const register = async (request) => {
 
     const user = await User.create(request.body);
 
-    const structuredUser = {
-      username: user.username,
-      fullName: user.fullName,
-      email: user.email,
-      gender: user.gender,
-      dateOfBirth: user.dateOfBirth,
-      location: user.location,
-    };
-
     return responseService.success(
       "Register succesful",
-      structuredUser,
+      userResponseObject(user),
       {},
       httpStatus.status.CREATED
     );
