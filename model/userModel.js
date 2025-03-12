@@ -54,14 +54,14 @@ const UserSchema = mongoose.Schema(
       {
         type: mongoose.SchemaTypes.ObjectId,
         ref: "Users",
-        default: []
+        default: [],
       },
     ],
     following: [
       {
         type: mongoose.SchemaTypes.ObjectId,
         ref: "Users",
-        default: []
+        default: [],
       },
     ],
     posts: [
