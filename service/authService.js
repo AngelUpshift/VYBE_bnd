@@ -6,7 +6,7 @@ const client = require("../config/redis");
 const bcrypt = require("bcryptjs");
 const sendEmail = require("../config/email");
 const crypto = require("crypto");
-const userResponseObject = require("../utils/userResponseObject");
+const { userResponseObject } = require("../utils/ResponseObject");
 
 const me = async (request) => {
   try {
@@ -201,7 +201,7 @@ const resetPassword = async (request) => {
   try {
     await validUser.save();
   } catch (error) {
-    responseService.error(
+    return responseService.error(
       "Internal server error.",
       errors.SERVER_ERROR,
       {},
@@ -216,4 +216,10 @@ const resetPassword = async (request) => {
   );
 };
 
-module.exports = { me, logout, changePassword, forgotPassword, resetPassword };
+module.exports = {
+  me,
+  logout,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+};

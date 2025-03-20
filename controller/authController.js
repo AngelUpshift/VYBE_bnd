@@ -1,5 +1,3 @@
-const { response } = require("express");
-const jwt = require("jsonwebtoken");
 const authService = require("../service/authService");
 
 const me = async (req, res) => {
@@ -32,4 +30,10 @@ const resetPassword = async (req, res) => {
   return res.status(response.status).json(response);
 };
 
-module.exports = { me, logout, changePassword, forgotPassword, resetPassword };
+module.exports = {
+  me,
+  logout,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+};

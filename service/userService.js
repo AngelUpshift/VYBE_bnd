@@ -4,7 +4,7 @@ const { createToken } = require("../config/token");
 const responseService = require("../utils/responseService");
 const errors = require("../constants/errors");
 const httpStatus = require("http-status");
-const userResponseObject = require("../utils/userResponseObject");
+const { userResponseObject } = require("../utils/ResponseObject");
 
 const register = async (request) => {
   try {
