@@ -3,6 +3,7 @@ const { isEmail } = require("validator");
 const { genderTypes, roleTypes } = require("../config/roles");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const mongooseAutoPopulate = require("mongoose-autopopulate");
 
 const UserSchema = mongoose.Schema(
   {
@@ -53,34 +54,44 @@ const UserSchema = mongoose.Schema(
     },
     followers: [
       {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: "Users",
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
         default: [],
       },
     ],
     following: [
       {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: "Users",
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: [],
+      },
+    ],
+    followRequests: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
         default: [],
       },
     ],
     posts: [
       {
-        type: mongoose.SchemaTypes.ObjectId,
-        // ref: postModel,
+        type: mongoose.Schema.Types.ObjectId,
+        default: [],
+        ref: "Post",
       },
     ],
     likedPosts: [
       {
-        type: mongoose.SchemaTypes.ObjectId,
-        // ref: postModel,
+        type: mongoose.Schema.Types.ObjectId,
+        default: [],
+        ref: "Post",
       },
     ],
     savedPosts: [
       {
-        type: mongoose.SchemaTypes.ObjectId,
-        // ref: postModel,
+        type: mongoose.Schema.Types.ObjectId,
+        default: [],
+        ref: "Post",
       },
     ],
     role: {
@@ -98,8 +109,8 @@ const UserSchema = mongoose.Schema(
     },
     blockedProfiles: [
       {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: "Users",
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
         default: [],
       },
     ],
@@ -134,6 +145,12 @@ const UserSchema = mongoose.Schema(
   }
 );
 
+// UserSchema.index({ username: 1 });
+// UserSchema.index({ email: 1 });
+// UserSchema.index({ followers: 1 });
+// UserSchema.index({ following: 1 });
+// UserSchema.index({ followRequests: 1 });
+
 UserSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     const salt = await bcrypt.genSalt(10);
@@ -156,5 +173,5 @@ UserSchema.methods.createRandomResetToken = function () {
   return resetToken;
 };
 
-const User = mongoose.model("Users", UserSchema);
+const User = mongoose.model("User", UserSchema);
 module.exports = User;
